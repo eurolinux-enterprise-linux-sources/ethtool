@@ -7,7 +7,7 @@ Name:		ethtool
 # matching-kernel-version versioning (2.6.33)
 Epoch:		2
 Version:	3.5
-Release:	5%{?dist}
+Release:	6%{?dist}
 Summary:	Ethernet settings tool for PCI ethernet cards
 
 License:	GPLv2
@@ -23,6 +23,7 @@ Patch4: ethtool-2-2-Hide-state-of-VLAN-tag-offload-and-LRO-if-the-kernel-is-too-
 Patch5: ethtool-3.5-backplane.patch
 Patch6: ethtool-3.5-kr.patch
 Patch7: ethtool-3.5-mdix.patch
+Patch8: ethtool-3.5-config-rss.patch
 BuildRequires:	automake, autoconf
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -40,6 +41,7 @@ network devices, especially of ethernet devices.
 %patch5 -p1 -b.bz1003891
 %patch6 -p1 -b.bz1003891.1
 %patch7 -p1 -b.bz1105589
+%patch8 -p1 -b.bz1066605
 
 # Only needed when using upstream git
 # aclocal
@@ -70,6 +72,10 @@ rm -rf %{buildroot}
 %{_mandir}/man8/%{name}.8*
 
 %changelog
+* Fri Feb 6 2015 Ivan Vecera <ivecera@redhat.com> 3.5-6
+- Include the support for configurable RSS hash keys
+  Resolves: bz#1066605
+
 * Fri Jun 20 2014 Ivan Vecera <ivecera@redhat.com> 3.5-5
 - Include the support for MDI-X state setting
   Resolves: bz#1105589
