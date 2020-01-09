@@ -1,13 +1,12 @@
 Name:		ethtool
 Epoch:		2
 Version:	4.8
-Release:	1%{?dist}
+Release:	10%{?dist}
 Summary:	Settings tool for Ethernet NICs
 
 License:	GPLv2
 Group:		Applications/System
-#Old URL:	http://sourceforge.net/projects/gkernel/
-URL:		http://ftp.kernel.org/pub/software/network/%{name}/
+URL:		https://www.kernel.org/pub/software/network/%{name}/
 
 # When using tarball from released upstream version:
 # - http://ftp.kernel.org/pub/software/network/%{name}/%{name}-%{version}.tar.bz2
@@ -24,6 +23,23 @@ Conflicts:      filesystem < 3
 Patch0:		0001-ethtool-add-register-dump-support-for-fjes-driver.patch
 Patch1:		0002-ethtool-sync-help-output-for-x-X-with-man-page.patch
 Patch2:		0003-ethtool-Fix-the-advertise-parameter-logic.patch
+Patch3:		0004-ethtool-Fix-SFF-8079-cable-technology-bit-parsing.patch
+Patch4:		0005-ethtool-Support-for-configurable-RSS-hash-function.patch
+Patch5:		0006-net_tstamp.h-sync-with-net-next.patch
+Patch6:		0007-ethtool-add-support-for-HWTSTAMP_FILTER_NTP_ALL.patch
+Patch7:		0008-ethtool-copy.h-sync-with-net-next.patch
+Patch8:		0009-ethtool-Add-support-for-2500baseT-5000baseT-link-mod.patch
+Patch9:		0010-ethtool.8-Fix-formatting-of-advertise-bitmask.patch
+Patch10:	0011-ethtool.8-Document-56000-advertise-link-modes.patch
+Patch11:	0012-ethtool-Remove-UDP-Fragmentation-Offload-error-print.patch
+Patch12:	0013-ethtool-copy.h-sync-with-net-next.patch
+Patch13:	0014-ethtool-Support-for-FEC-encoding-control.patch
+Patch14:	0015-ethtool-copy.h-sync-with-net-next.patch
+Patch15:	0016-ethtool-add-support-for-extra-RSS-contexts-and-RSS-s.patch
+Patch16:	0017-ethtool.8-Document-RSS-context-control-and-RSS-filte.patch
+Patch17:	0018-ethtool-don-t-fall-back-to-grxfhindir-when-context-w.patch
+Patch18:	0019-ethtool-Fix-coding-style-warnings-and-errors-reporte.patch
+Patch19:	0020-ethtool-Add-support-for-200Gbps-50Gbps-per-lane-link.patch
 
 %description
 This utility allows querying and changing settings such as speed,
@@ -35,6 +51,23 @@ network devices, especially of Ethernet devices.
 %patch0 -p1
 %patch1 -p1
 %patch2 -p1
+%patch3 -p1
+%patch4 -p1
+%patch5 -p1
+%patch6 -p1
+%patch7 -p1
+%patch8 -p1
+%patch9 -p1
+%patch10 -p1
+%patch11 -p1
+%patch12 -p1
+%patch13 -p1
+%patch14 -p1
+%patch15 -p1
+%patch16 -p1
+%patch17 -p1
+%patch18 -p1
+%patch19 -p1
 
 # Only needed when using upstream git
 # aclocal
@@ -57,6 +90,35 @@ make DESTDIR=%{buildroot} INSTALL='install -p' install
 %{_mandir}/man8/%{name}.8*
 
 %changelog
+* Fri Mar 15 2019 Ivan Vecera <ivecera@redhat.com> - 2:4.8-9
+- Added support for 200Gbps (50Gbps/lane) link mode
+
+* Mon Jul  2 2018 Ivan Vecera <ivecera@redhat.com> - 2:4.8-9
+- Added support for extra RSS contexts and steering filters
+
+* Mon Jun 11 2018 Ivan Vecera <ivecera@redhat.com> - 2:4.8-8
+- Fixed RPM URL field in spec file
+
+* Wed Jan 10 2018 Ivan Vecera <ivecera@redhat.com> - 2:4.8-7
+- Fixed synopsis in ethtool man page
+
+* Tue Jan  9 2018 Ivan Vecera <ivecera@redhat.com> - 2:4.8-6
+- Added support for setting FEC parameters
+
+* Fri Jan  5 2018 Ivan Vecera <ivecera@redhat.com> - 2:4.8-5
+- Fixed changelog
+
+* Fri Jan  5 2018 Ivan Vecera <ivecera@redhat.com> - 2:4.8-4
+- Fixed UDP fragmentation offloading error messages printed on kernel-alt >=4.14
+
+* Tue Nov 14 2017 Ivan Vecera <ivecera@redhat.com> - 2:4.8-3
+- Added support for 2500baseT/5000baseT link modes
+
+* Fri Nov  3 2017 Ivan Vecera <ivecera@redhat.com> - 2:4.8-2
+- Added support for configurable RSS hash function
+- Fixed SFF 8079 cable technology bit parsing
+- Added support for HWTSTAMP_FILTER_NTP_ALL
+
 * Wed Mar 22 2017 Ivan Vecera <ivecera@redhat.com> - 2:4.8-1
 - Rebased against upstream v4.8
 

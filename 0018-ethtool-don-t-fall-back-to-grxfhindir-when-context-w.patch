@@ -1,0 +1,34 @@
+From 6ff8142033aed6f9eafe7c4f8a67a55c5a98ab2f Mon Sep 17 00:00:00 2001
+From: Edward Cree <ecree@solarflare.com>
+Date: Mon, 19 Mar 2018 16:52:06 +0000
+Subject: [PATCH 18/18] ethtool: don't fall back to grxfhindir when context was
+ specified
+
+In do_grfxh(), if rss_context is non-zero, we must not fall back to
+ do_grxfhindir() if ETHTOOL_GRSSH fails, for that reads the default RSS
+ context and not the one specified.
+
+Fixes: f5d55b967e0c ("ethtool: add support for extra RSS contexts and RSS steering filters")
+Signed-off-by: Edward Cree <ecree@solarflare.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+(cherry picked from commit 7984d34ea893a529330b6addb959cbf6e3ec026f)
+---
+ ethtool.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ethtool.c b/ethtool.c
+index a276fdb..2ecc13f 100644
+--- a/ethtool.c
++++ b/ethtool.c
+@@ -3748,7 +3748,7 @@ static int do_grxfh(struct cmd_context *ctx)
+ 	rss_head.cmd = ETHTOOL_GRSSH;
+ 	rss_head.rss_context = rss_context;
+ 	err = send_ioctl(ctx, &rss_head);
+-	if (err < 0 && errno == EOPNOTSUPP) {
++	if (err < 0 && errno == EOPNOTSUPP && !rss_context) {
+ 		return do_grxfhindir(ctx, &ring_count);
+ 	} else if (err < 0) {
+ 		perror("Cannot get RX flow hash indir size and/or key size");
+-- 
+1.8.3.1
+

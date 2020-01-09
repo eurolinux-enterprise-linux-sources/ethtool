@@ -1,0 +1,40 @@
+From ee10917f5cb60f8602deac815ec9923258fa6ab2 Mon Sep 17 00:00:00 2001
+From: Miroslav Lichvar <mlichvar@redhat.com>
+Date: Tue, 23 May 2017 16:29:30 +0200
+Subject: [PATCH 7/7] ethtool: add support for HWTSTAMP_FILTER_NTP_ALL
+
+Add HWTSTAMP_FILTER_NTP_ALL to the list of hardware receive
+filters which can be printed by ethtool -T.
+
+CC: Richard Cochran <richardcochran@gmail.com>
+Signed-off-by: Miroslav Lichvar <mlichvar@redhat.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+(cherry picked from commit d976d5dada4e58d3fdc31506943307159289493a)
+---
+ ethtool.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/ethtool.c b/ethtool.c
+index 8eba6e6..5465f59 100644
+--- a/ethtool.c
++++ b/ethtool.c
+@@ -1583,7 +1583,7 @@ static char *tx_type_labels[N_TX_TYPES] = {
+ 	"one-step-sync         (HWTSTAMP_TX_ONESTEP_SYNC)",
+ };
+ 
+-#define N_RX_FILTERS (HWTSTAMP_FILTER_PTP_V2_DELAY_REQ + 1)
++#define N_RX_FILTERS (HWTSTAMP_FILTER_NTP_ALL + 1)
+ 
+ static char *rx_filter_labels[N_RX_FILTERS] = {
+ 	"none                  (HWTSTAMP_FILTER_NONE)",
+@@ -1601,6 +1601,7 @@ static char *rx_filter_labels[N_RX_FILTERS] = {
+ 	"ptpv2-event           (HWTSTAMP_FILTER_PTP_V2_EVENT)",
+ 	"ptpv2-sync            (HWTSTAMP_FILTER_PTP_V2_SYNC)",
+ 	"ptpv2-delay-req       (HWTSTAMP_FILTER_PTP_V2_DELAY_REQ)",
++	"ntp-all               (HWTSTAMP_FILTER_NTP_ALL)",
+ };
+ 
+ static int dump_tsinfo(const struct ethtool_ts_info *info)
+-- 
+1.8.3.1
+

@@ -1,0 +1,298 @@
+From 6477a1f47b15c2a81a9995397942a0fc17f0b06f Mon Sep 17 00:00:00 2001
+From: Dustin Byford <dustin@cumulusnetworks.com>
+Date: Mon, 18 Dec 2017 14:57:41 -0800
+Subject: [PATCH 14/14] ethtool: Support for FEC encoding control
+
+As FEC settings and different FEC modes are mandatory
+and configurable across various interfaces of 25G/50G/100G/40G,
+the lack of FEC encoding control and reporting today is a source
+for interoperability issues for many vendors
+
+set-fec/show-fec option(s) are designed to provide control and report
+the FEC encoding on the link.
+
+$ethtool --set-fec swp1 encoding [off | RS | BaseR | auto]
+
+Encoding: Types of encoding
+Off    :  Turning off FEC
+RS     :  Force RS-FEC encoding
+BaseR  :  Force BaseR encoding
+Auto   :  Default FEC settings for drivers, and would represent
+          asking the hardware to essentially go into a best effort mode.
+
+Here are a few examples of what we would expect if encoding=auto:
+- if autoneg is on, we are  expecting FEC to be negotiated as on or off
+  as long as protocol supports it
+- if the hardware is capable of detecting the FEC encoding on it's
+  receiver it will reconfigure its encoder to match
+- in absence of the above, the configuration would be set to IEEE
+  defaults.
+
+>From our understanding, this is essentially what most hardware/driver
+combinations are doing today in the absence of a way for users to
+control the behavior.
+
+$ethtool --show-fec  swp1
+FEC parameters for swp1:
+FEC encodings:  RS
+
+ethtool devname output:
+$ethtool swp1
+Settings for swp1:
+root@hpe-7712-03:~# ethtool swp18
+Settings for swp18:
+    Supported ports: [ FIBRE ]
+    Supported link modes:   40000baseCR4/Full
+                            40000baseSR4/Full
+                            40000baseLR4/Full
+                            100000baseSR4/Full
+                            100000baseCR4/Full
+                            100000baseLR4_ER4/Full
+    Supported pause frame use: No
+    Supports auto-negotiation: Yes
+    Supported FEC modes: [RS | BaseR | None | Not reported]
+    Advertised link modes:  Not reported
+    Advertised pause frame use: No
+    Advertised auto-negotiation: No
+    Advertised FEC modes: [RS | BaseR | None | Not reported]
+    Speed: 100000Mb/s
+    Duplex: Full
+    Port: FIBRE
+    PHYAD: 106
+    Transceiver: internal
+    Auto-negotiation: off
+    Link detected: yes
+
+Signed-off-by: Vidya Sagar Ravipati <vidya.chowdary@gmail.com>
+Signed-off-by: Dustin Byford <dustin@cumulusnetworks.com>
+[code style + man page edits + commit message update]
+Signed-off-by: Dirk van der Merwe <dirk.vandermerwe@netronome.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+(cherry picked from commit 8db75d1e4001ac4cdfc73d5bedd0ec6d58a3d617)
+
+Conflicts:
+	ethtool.8.in
+	ethtool.c
+---
+ ethtool.8.in |  31 ++++++++++++++++
+ ethtool.c    | 119 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 150 insertions(+)
+
+diff --git a/ethtool.8.in b/ethtool.8.in
+index c176cac..6816020 100644
+--- a/ethtool.8.in
++++ b/ethtool.8.in
+@@ -342,6 +342,13 @@ ethtool \- query or control network driver and hardware settings
+ .B2 tx-lpi on off
+ .BN tx-timer
+ .BN advertise
++.HP
++.B ethtool \-\-show\-fec
++.I devname
++.HP
++.B ethtool \-\-set\-fec
++.I devname
++.B4 encoding auto off rs baser
+ .
+ .\" Adjust lines (i.e. full justification) and hyphenate.
+ .ad
+@@ -959,6 +966,30 @@ Values are as for
+ Sets the amount of time the device should stay in idle mode prior to asserting
+ its Tx LPI (in microseconds). This has meaning only when Tx LPI is enabled.
+ .RE
++.TP
++.B \-\-show\-fec
++Queries the specified network device for its support of Forward Error Correction.
++.TP
++.B \-\-set\-fec
++Configures Forward Error Correction for the specified network device.
++
++Forward Error Correction modes selected by a user are expected to be persisted
++after any hotplug events. If a module is swapped that does not support the
++current FEC mode, the driver or firmware must take the link down
++administratively and report the problem in the system logs for users to correct.
++.RS 4
++.TP
++.A4 encoding auto off rs baser
++Sets the FEC encoding for the device.
++.TS
++nokeep;
++lB	l.
++auto	Use the driver's default encoding
++off	Turn off FEC
++RS	Force RS-FEC encoding
++BaseR	Force BaseR encoding
++.TE
++.RE
+ .SH BUGS
+ Not supported (in part or whole) on all network drivers.
+ .SH AUTHOR
+diff --git a/ethtool.c b/ethtool.c
+index 1411d62..2e9ee2c 100644
+--- a/ethtool.c
++++ b/ethtool.c
+@@ -543,6 +543,9 @@ static void init_global_link_mode_masks(void)
+ 		ETHTOOL_LINK_MODE_Pause_BIT,
+ 		ETHTOOL_LINK_MODE_Asym_Pause_BIT,
+ 		ETHTOOL_LINK_MODE_Backplane_BIT,
++		ETHTOOL_LINK_MODE_FEC_NONE_BIT,
++		ETHTOOL_LINK_MODE_FEC_RS_BIT,
++		ETHTOOL_LINK_MODE_FEC_BASER_BIT,
+ 	};
+ 	unsigned int i;
+ 
+@@ -690,6 +693,7 @@ static void dump_link_caps(const char *prefix, const char *an_prefix,
+ 	};
+ 	int indent;
+ 	int did1, new_line_pend, i;
++	int fecreported = 0;
+ 
+ 	/* Indent just like the separate functions used to */
+ 	indent = strlen(prefix) + 14;
+@@ -741,6 +745,26 @@ static void dump_link_caps(const char *prefix, const char *an_prefix,
+ 			fprintf(stdout, "Yes\n");
+ 		else
+ 			fprintf(stdout, "No\n");
++
++		fprintf(stdout, "	%s FEC modes:", prefix);
++		if (ethtool_link_mode_test_bit(ETHTOOL_LINK_MODE_FEC_NONE_BIT,
++					       mask)) {
++			fprintf(stdout, " None");
++			fecreported = 1;
++		}
++		if (ethtool_link_mode_test_bit(ETHTOOL_LINK_MODE_FEC_BASER_BIT,
++					       mask)) {
++			fprintf(stdout, " BaseR");
++			fecreported = 1;
++		}
++		if (ethtool_link_mode_test_bit(ETHTOOL_LINK_MODE_FEC_RS_BIT,
++					       mask)) {
++			fprintf(stdout, " RS");
++			fecreported = 1;
++		}
++		if (!fecreported)
++			fprintf(stdout, " Not reported");
++		fprintf(stdout, "\n");
+ 	}
+ }
+ 
+@@ -1569,6 +1593,20 @@ static void dump_eeecmd(struct ethtool_eee *ep)
+ 	dump_link_caps("Link partner advertised EEE", "", link_mode, 1);
+ }
+ 
++static void dump_fec(u32 fec)
++{
++	if (fec & ETHTOOL_FEC_NONE)
++		fprintf(stdout, " None");
++	if (fec & ETHTOOL_FEC_AUTO)
++		fprintf(stdout, " Auto");
++	if (fec & ETHTOOL_FEC_OFF)
++		fprintf(stdout, " Off");
++	if (fec & ETHTOOL_FEC_BASER)
++		fprintf(stdout, " BaseR");
++	if (fec & ETHTOOL_FEC_RS)
++		fprintf(stdout, " RS");
++}
++
+ #define N_SOTS 7
+ 
+ static char *so_timestamping_labels[N_SOTS] = {
+@@ -4592,6 +4630,84 @@ static int do_seee(struct cmd_context *ctx)
+ 	return 0;
+ }
+ 
++static int fecmode_str_to_type(const char *str)
++{
++	int fecmode = 0;
++
++	if (!str)
++		return fecmode;
++
++	if (!strcasecmp(str, "auto"))
++		fecmode |= ETHTOOL_FEC_AUTO;
++	else if (!strcasecmp(str, "off"))
++		fecmode |= ETHTOOL_FEC_OFF;
++	else if (!strcasecmp(str, "rs"))
++		fecmode |= ETHTOOL_FEC_RS;
++	else if (!strcasecmp(str, "baser"))
++		fecmode |= ETHTOOL_FEC_BASER;
++
++	return fecmode;
++}
++
++static int do_gfec(struct cmd_context *ctx)
++{
++	struct ethtool_fecparam feccmd = { 0 };
++	int rv;
++
++	if (ctx->argc != 0)
++		exit_bad_args();
++
++	feccmd.cmd = ETHTOOL_GFECPARAM;
++	rv = send_ioctl(ctx, &feccmd);
++	if (rv != 0) {
++		perror("Cannot get FEC settings");
++		return rv;
++	}
++
++	fprintf(stdout, "FEC parameters for %s:\n", ctx->devname);
++	fprintf(stdout, "Configured FEC encodings:");
++	dump_fec(feccmd.fec);
++	fprintf(stdout, "\n");
++
++	fprintf(stdout, "Active FEC encoding:");
++	dump_fec(feccmd.active_fec);
++	fprintf(stdout, "\n");
++
++	return 0;
++}
++
++static int do_sfec(struct cmd_context *ctx)
++{
++	char *fecmode_str = NULL;
++	struct ethtool_fecparam feccmd;
++	struct cmdline_info cmdline_fec[] = {
++		{ "encoding", CMDL_STR,  &fecmode_str,  &feccmd.fec},
++	};
++	int changed;
++	int fecmode;
++	int rv;
++
++	parse_generic_cmdline(ctx, &changed, cmdline_fec,
++			      ARRAY_SIZE(cmdline_fec));
++
++	if (!fecmode_str)
++		exit_bad_args();
++
++	fecmode = fecmode_str_to_type(fecmode_str);
++	if (!fecmode)
++		exit_bad_args();
++
++	feccmd.cmd = ETHTOOL_SFECPARAM;
++	feccmd.fec = fecmode;
++	rv = send_ioctl(ctx, &feccmd);
++	if (rv != 0) {
++		perror("Cannot set FEC settings");
++		return rv;
++	}
++
++	return 0;
++}
++
+ #ifndef TEST_ETHTOOL
+ int send_ioctl(struct cmd_context *ctx, void *cmd)
+ {
+@@ -4754,6 +4870,9 @@ static const struct option {
+ 	  "		[ advertise %x ]\n"
+ 	  "		[ tx-lpi on|off ]\n"
+ 	  "		[ tx-timer %d ]\n"},
++	{ "--show-fec", 1, do_gfec, "Show FEC settings"},
++	{ "--set-fec", 1, do_sfec, "Set FEC settings",
++	  "		[ encoding auto|off|rs|baser ]\n"},
+ 	{ "-h|--help", 0, show_usage, "Show this help" },
+ 	{ "--version", 0, do_version, "Show version number" },
+ 	{}
+-- 
+1.8.3.1
+

@@ -1,0 +1,39 @@
+From b41605a9328686d45f6f4ee7791f476866bcc7a9 Mon Sep 17 00:00:00 2001
+From: Shaker Daibes <shakerd@mellanox.com>
+Date: Mon, 18 Sep 2017 10:35:38 +0300
+Subject: [PATCH 12/12] ethtool: Remove UDP Fragmentation Offload error prints
+
+UFO was removed in kernel, here we remove UFO error prints when using
+"ethtool -k" command.
+
+Fixes the following issue:
+Features for ens8:
+Cannot get device udp-fragmentation-offload settings: Operation not
+supported
+
+Signed-off-by: Shaker Daibes <shakerd@mellanox.com>
+Signed-off-by: Tariq Toukan <tariqt@mellanox.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+(cherry picked from commit d5d35d8331dee79a7453d3ea501bcc7b8b90582c)
+---
+ ethtool.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/ethtool.c b/ethtool.c
+index 9650f54..1411d62 100644
+--- a/ethtool.c
++++ b/ethtool.c
+@@ -2187,6 +2187,10 @@ get_features(struct cmd_context *ctx, const struct feature_defs *defs)
+ 		eval.cmd = off_flag_def[i].get_cmd;
+ 		err = send_ioctl(ctx, &eval);
+ 		if (err) {
++			if (errno == EOPNOTSUPP &&
++			    off_flag_def[i].get_cmd == ETHTOOL_GUFO)
++				continue;
++
+ 			fprintf(stderr,
+ 				"Cannot get device %s settings: %m\n",
+ 				off_flag_def[i].long_name);
+-- 
+1.8.3.1
+

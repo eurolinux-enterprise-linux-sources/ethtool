@@ -1,0 +1,37 @@
+From 2c64f09bee9b601cb60fd0398f1e4eb1b09a3ebb Mon Sep 17 00:00:00 2001
+From: Gal Pressman <galp@mellanox.com>
+Date: Thu, 28 Sep 2017 15:08:53 +0300
+Subject: [PATCH 11/11] ethtool.8: Document 56000 advertise link modes
+
+Add the following advertise modes to the manual:
+56000baseKR4 Full
+56000baseCR4 Full
+56000baseSR4 Full
+56000baseLR4 Full
+
+Signed-off-by: Gal Pressman <galp@mellanox.com>
+Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+(cherry picked from commit 47c71e3c45cd6e248a25e87cbd8afa201836e59d)
+---
+ ethtool.8.in | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/ethtool.8.in b/ethtool.8.in
+index c7208ab..c176cac 100644
+--- a/ethtool.8.in
++++ b/ethtool.8.in
+@@ -601,6 +601,10 @@ lB	l	lB.
+ 0x400000000	50000baseCR2 Full
+ 0x800000000	50000baseKR2 Full
+ 0x10000000000	50000baseSR2 Full
++0x8000000	56000baseKR4 Full
++0x10000000	56000baseCR4 Full
++0x20000000	56000baseSR4 Full
++0x40000000	56000baseLR4 Full
+ 0x1000000000	100000baseKR4 Full
+ 0x2000000000	100000baseSR4 Full
+ 0x4000000000	100000baseCR4 Full
+-- 
+1.8.3.1
+
