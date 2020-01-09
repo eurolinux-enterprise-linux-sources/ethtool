@@ -1,0 +1,44 @@
+From 47b95959941b3d7d2d35a128da5685799329aaf6 Mon Sep 17 00:00:00 2001
+From: Michael Chan <mchan@broadcom.com>
+Date: Tue, 22 Nov 2016 18:55:47 -0500
+Subject: [PATCH 3/3] ethtool: Fix the "advertise" parameter logic.
+
+The current code ignores the value of the advertise parameter.  For example,
+
+ethtool -s ethx advertise 0x1000
+
+The full_advertising_wanted parameter of 0x1000 is not passed to the kernel.
+The reason is that advertising_wanted is NULL in this case, and ethtool
+will think that the user has given no advertisement input and so it will
+proceed to pass all supported advertisement speeds to the kernel.
+
+The older legacy ethtool with similar logic worked because
+advertising_wanted was an integer and could take on -1 and 0.  It would pass
+the full_advertising_wanted value if advertising_wanted == -1.
+
+This fix is to pass all supported advertisement speeds only when both
+advertising_wanted == NULL && full_advertising_wanted == NULL.
+
+Signed-off-by: Michael Chan <michael.chan@broadcom.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ ethtool.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/ethtool.c b/ethtool.c
+index 0d3244e..ce48639 100644
+--- a/ethtool.c
++++ b/ethtool.c
+@@ -2972,7 +2972,8 @@ static int do_sset(struct cmd_context *ctx)
+ 				fprintf(stderr,	"\n");
+ 			}
+ 			if (autoneg_wanted == AUTONEG_ENABLE &&
+-			    advertising_wanted == NULL) {
++			    advertising_wanted == NULL &&
++			    full_advertising_wanted == NULL) {
+ 				unsigned int i;
+ 
+ 				/* Auto negotiation enabled, but with
+-- 
+1.8.3.1
+

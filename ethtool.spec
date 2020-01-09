@@ -1,7 +1,7 @@
 Name:		ethtool
 Epoch:		2
-Version:	4.5
-Release:	3%{?dist}
+Version:	4.8
+Release:	1%{?dist}
 Summary:	Settings tool for Ethernet NICs
 
 License:	GPLv2
@@ -21,13 +21,9 @@ URL:		http://ftp.kernel.org/pub/software/network/%{name}/
 Source0:	http://ftp.kernel.org/pub/software/network/%{name}/%{name}-%{version}.tar.xz
 BuildRequires:	automake, autoconf
 Conflicts:      filesystem < 3
-Patch0:		0001-ethtool.c-fix-memory-leaks.patch
-Patch1:		0002-ethtool.c-add-support-for-ETHTOOL_xLINKSETTINGS-ioctl.patch
-Patch2:		0003-ethtool-copy.h-sync-with-net.patch
-Patch3:		0004-ethtool-Reorganizing-SFF-8024-fields-for-SFP-QSFP.patch
-Patch4:		0005-ethtool-QSFP-Plus-QSFP28-Diagnostics-Information-Sup.patch
-Patch5:		0006-ethtool-Enhancing-link-mode-bits-to-support-25G-50G-.patch
-Patch6:		0007-ethtool-Document-new-ethtool-advertise-speeds.patch
+Patch0:		0001-ethtool-add-register-dump-support-for-fjes-driver.patch
+Patch1:		0002-ethtool-sync-help-output-for-x-X-with-man-page.patch
+Patch2:		0003-ethtool-Fix-the-advertise-parameter-logic.patch
 
 %description
 This utility allows querying and changing settings such as speed,
@@ -39,10 +35,6 @@ network devices, especially of Ethernet devices.
 %patch0 -p1
 %patch1 -p1
 %patch2 -p1
-%patch3 -p1
-%patch4 -p1
-%patch5 -p1
-%patch6 -p1
 
 # Only needed when using upstream git
 # aclocal
@@ -65,6 +57,18 @@ make DESTDIR=%{buildroot} INSTALL='install -p' install
 %{_mandir}/man8/%{name}.8*
 
 %changelog
+* Wed Mar 22 2017 Ivan Vecera <ivecera@redhat.com> - 2:4.8-1
+- Rebased against upstream v4.8
+
+* Fri Mar 17 2017 Ivan Vecera <ivecera@redhat.com> - 2:4.5-6
+- Fixed the "advertise" parameter logic
+
+* Tue Feb 21 2017 Ivan Vecera <ivecera@redhat.com> - 2:4.5-5
+- Fixed help page for commands -x and -X
+
+* Thu Feb  2 2017 Ivan Vecera <ivecera@redhat.com> - 2:4.5-4
+- Add register dump support for fjes driver
+
 * Tue Aug 16 2016 Ivan Vecera <ivecera@redhat.com> - 2:4.5-3
 - Added support for new ETHTOOL_xLINKSETTINGS API
 - Added support for diagnostics information for QSFP Plus/QSFP28 modules
