@@ -1,12 +1,13 @@
 Name:		ethtool
 Epoch:		2
 Version:	4.8
-Release:	10%{?dist}
+Release:	7%{?dist}
 Summary:	Settings tool for Ethernet NICs
 
 License:	GPLv2
 Group:		Applications/System
-URL:		https://www.kernel.org/pub/software/network/%{name}/
+#Old URL:	http://sourceforge.net/projects/gkernel/
+URL:		http://ftp.kernel.org/pub/software/network/%{name}/
 
 # When using tarball from released upstream version:
 # - http://ftp.kernel.org/pub/software/network/%{name}/%{name}-%{version}.tar.bz2
@@ -34,12 +35,6 @@ Patch10:	0011-ethtool.8-Document-56000-advertise-link-modes.patch
 Patch11:	0012-ethtool-Remove-UDP-Fragmentation-Offload-error-print.patch
 Patch12:	0013-ethtool-copy.h-sync-with-net-next.patch
 Patch13:	0014-ethtool-Support-for-FEC-encoding-control.patch
-Patch14:	0015-ethtool-copy.h-sync-with-net-next.patch
-Patch15:	0016-ethtool-add-support-for-extra-RSS-contexts-and-RSS-s.patch
-Patch16:	0017-ethtool.8-Document-RSS-context-control-and-RSS-filte.patch
-Patch17:	0018-ethtool-don-t-fall-back-to-grxfhindir-when-context-w.patch
-Patch18:	0019-ethtool-Fix-coding-style-warnings-and-errors-reporte.patch
-Patch19:	0020-ethtool-Add-support-for-200Gbps-50Gbps-per-lane-link.patch
 
 %description
 This utility allows querying and changing settings such as speed,
@@ -62,12 +57,6 @@ network devices, especially of Ethernet devices.
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
-%patch14 -p1
-%patch15 -p1
-%patch16 -p1
-%patch17 -p1
-%patch18 -p1
-%patch19 -p1
 
 # Only needed when using upstream git
 # aclocal
@@ -90,15 +79,6 @@ make DESTDIR=%{buildroot} INSTALL='install -p' install
 %{_mandir}/man8/%{name}.8*
 
 %changelog
-* Fri Mar 15 2019 Ivan Vecera <ivecera@redhat.com> - 2:4.8-9
-- Added support for 200Gbps (50Gbps/lane) link mode
-
-* Mon Jul  2 2018 Ivan Vecera <ivecera@redhat.com> - 2:4.8-9
-- Added support for extra RSS contexts and steering filters
-
-* Mon Jun 11 2018 Ivan Vecera <ivecera@redhat.com> - 2:4.8-8
-- Fixed RPM URL field in spec file
-
 * Wed Jan 10 2018 Ivan Vecera <ivecera@redhat.com> - 2:4.8-7
 - Fixed synopsis in ethtool man page
 
