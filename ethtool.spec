@@ -7,7 +7,7 @@ Name:		ethtool
 # matching-kernel-version versioning (2.6.33)
 Epoch:		2
 Version:	3.5
-Release:	1.2%{?dist}
+Release:	1.4%{?dist}
 Summary:	Ethernet settings tool for PCI ethernet cards
 
 License:	GPLv2
@@ -20,6 +20,8 @@ Patch1: ethtool-3.5-regdump.patch
 Patch2: ethtool-3.5-ixgbe-mac.patch
 Patch3: ethtool-1-2-Revert-Fix-reporting-of-VLAN-tag-offload-flags-on-Linux-2.6.37.patch
 Patch4: ethtool-2-2-Hide-state-of-VLAN-tag-offload-and-LRO-if-the-kernel-is-too-old.patch
+Patch5: ethtool-3.5-backplane.patch
+Patch6: ethtool-3.5-kr.patch
 BuildRequires:	automake, autoconf
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -34,6 +36,8 @@ network devices, especially of ethernet devices.
 %patch2 -p1 -b.ixgbe-mac
 %patch3 -p1 -b.lro.1
 %patch4 -p1 -b.lro.2
+%patch5 -p1 -b.bz1003891
+%patch6 -p1 -b.bz1003891.1
 
 # Only needed when using upstream git
 # aclocal
@@ -64,6 +68,15 @@ rm -rf %{buildroot}
 %{_mandir}/man8/%{name}.8*
 
 %changelog
+* Tue Apr 22 2014 Jay Fenlason <fenlason@redhat.com> 3.5-1.4
+- Backport -kr patch to close
+  Resolves: bz#1071989
+  the rest of the way.
+
+* Mon Mar 3 2014 Jay Fenlason <fenlason@redhat.com> 3.5-1.3
+- Backport the -backplane patch from upstream to close
+  Resolves: bz#1071989
+
 * Fri Dec 6 2013 Jay Fenlason <fenlason@redhat.com> 3.5-1.2
 - Backport two patches to improve register dumps on ixgbe devices
   Resolves: bz#1038956
