@@ -7,7 +7,7 @@ Name:		ethtool
 # matching-kernel-version versioning (2.6.33)
 Epoch:		2
 Version:	3.5
-Release:	1%{?dist}
+Release:	5%{?dist}
 Summary:	Ethernet settings tool for PCI ethernet cards
 
 License:	GPLv2
@@ -16,6 +16,13 @@ URL:		http://sourceforge.net/projects/gkernel/
 
 #Source0:	http://downloads.sourceforge.net/gkernel/%{name}-%{version}%{?pre}.tar.gz
 Source0: http://ftp.kernel.org/pub/software/network/%{name}/%{name}-%{version}.tar.xz
+Patch1: ethtool-3.5-regdump.patch
+Patch2: ethtool-3.5-ixgbe-mac.patch
+Patch3: ethtool-1-2-Revert-Fix-reporting-of-VLAN-tag-offload-flags-on-Linux-2.6.37.patch
+Patch4: ethtool-2-2-Hide-state-of-VLAN-tag-offload-and-LRO-if-the-kernel-is-too-old.patch
+Patch5: ethtool-3.5-backplane.patch
+Patch6: ethtool-3.5-kr.patch
+Patch7: ethtool-3.5-mdix.patch
 BuildRequires:	automake, autoconf
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -26,6 +33,13 @@ network devices, especially of ethernet devices.
 
 %prep
 %setup -q -n %{name}-%{version}%{?pre}
+%patch1 -p1 -b.regdump
+%patch2 -p1 -b.ixgbe-mac
+%patch3 -p1 -b.bz1010843.1
+%patch4 -p1 -b.bz1010843.2
+%patch5 -p1 -b.bz1003891
+%patch6 -p1 -b.bz1003891.1
+%patch7 -p1 -b.bz1105589
 
 # Only needed when using upstream git
 # aclocal
@@ -56,6 +70,27 @@ rm -rf %{buildroot}
 %{_mandir}/man8/%{name}.8*
 
 %changelog
+* Fri Jun 20 2014 Ivan Vecera <ivecera@redhat.com> 3.5-5
+- Include the support for MDI-X state setting
+  Resolves: bz#1105589
+
+* Tue Apr 15 2014 Jay Fenlason <fenlason@redhat.com> 3.5-4
+- Include the backported -kr patch from upstream to close
+  Resolves: bz#1003891
+  the rest of the way.
+
+* Mon Mar 3 2014 Jay Fenlason <fenlason@redhat.com> 3.5-3
+- Include the -backplane patch from upstream to close
+  Resolves: bz#1003891
+
+* Fri Dec 6 2013 Jay Fenlason <fenlason@redhat.com> 3.5-2
+- Include a pair of small patches from upstream to improve
+  handling of lro options
+  Resolves: bz#1010843
+- Include a pair of small patches to improve dumping of
+  registers on ixgbe devices
+  Resolves: bz#1018367
+  
 * Fri Aug 10 2012 Jay Fenlason <fenlason@redhat.com> 3.5-1
 - Update to latest upstream
   Resolves: bz#819846
